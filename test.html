@@ -4,27 +4,17 @@
     <script type='text/javascript' src='drawLogic.js'></script>
     <script type='text/javascript' src='tests.js'></script>
     <script type='text/javascript'>
-      var drawingCanvas = document.getElementById('myDrawing');
+      var myLogicTree = LogicTree;
 
-      // Check the element is in the DOM and the browser supports canvas
-      if(drawingCanvas.getContext) {
-        // Initaliase a 2-dimensional drawing context
-        var context = drawingCanvas.getContext('2d');
+      function startEverything() {
+        var drawingCanvas = document.getElementById('drawing');
 
-        //Canvas commands go here
-        // Create the yellow face
-        context.strokeStyle = "#000000";
-        context.fillStyle = "#FFFF00";
-        context.beginPath();
-        context.arc(100,100,50,0,Math.PI*2,true);
-        context.closePath();
-        context.stroke();
-        context.fill();
+        myLogicTree.init(test4(), drawingCanvas);
       }
   </script>
   </head>
-  <body>
-    <canvas id="myDrawing" width="200" height="200">
+  <body onload='javascript:startEverything()'>
+    <canvas id="drawing" width="200" height="200">
     <p>Your browser doesn't support canvas.</p>
     </canvas>
   </body>
