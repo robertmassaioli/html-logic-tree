@@ -136,7 +136,7 @@ function test6() {
         {
             "name": "C",
             "type": "Val",
-            "value": "true",
+            "value": "true"
         }]
     });
 }
@@ -163,7 +163,7 @@ function test7() {
         {
             "name": "C",
             "type": "Val",
-            "value": "true",
+            "value": "true"
         }]
     });
 }
