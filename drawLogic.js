@@ -89,28 +89,35 @@ LogicTreeHelper = {
       }
     }
   },
-  tile_width : null,
-  tile_height : null,
-  draw : function (tree) {
+  draw : function (tree, context) {
     if (tree.type == "Op") {
       if (tree.value == "and") {
-        drawAnd(tree);
+        this.drawAnd(tree, context);
       } else {
-        drawOr(tree);
+        this.drawOr(tree, context);
       }
     } else {
-      drawNode(tree);
+      this.drawNode(tree, context);
     }
   },
   drawNode : function (tree, context) {
   },
   drawOr : function (tree, context) {
-    context.begin_path();
-    context.move_to(tree.start_x * tile_width, tree.start_y * tile_height);
-    context.line_to(tree.child[0]
-    context.end_path();
+    for (i in tree.child) {
+      context.beginPath();
+      context.sMoveTo(tree.start_x, tree.start_y);
+      context.sLineTo(tree.start_x, tree.child[i].start_y);
+      context.sLineTo(tree.child[i].start_x, tree.child[i].start_y);
+      context.stroke();
 
-    
+      context.beginPath();
+      context.sMoveTo(tree.child[i].start_x + tree.child[i].width, tree.child[i].start_y);
+      context.sLineTo(tree.child[i].start_x + tree.child[i].width + 1, tree.child[i].start_y);
+      context.sLineTo(tree.child[i].start_x + tree.child[i].width + 1, tree.start_y);
+      context.stroke();
+
+      this.draw(tree.child[i], context);
+    }
   },
   drawAnd : function (tree, context) {
   }
@@ -163,24 +170,36 @@ LogicTree = {
     this.tree.start_x = this.helper.settings.sideLines ? 1 : 0;
     this.tree.start_y = this.tree.height / 2;
     this.helper.calculateChildPosition(this.tree);
+    
+    this.dodgyExtendContextToMakeItEasyForMe();
 
     this.tree_loaded = true;
     return true;
   },
+  dodgyExtendContextToMakeItEasyForMe : function () {
+    this.context.sLineTo = function (x, y) {this.lineTo(x * this.tile_width, y * this.tile_height)}
+    this.context.sMoveTo = function (x, y) {this.moveTo(x * this.tile_width, y * this.tile_height)}
+  },
   draw : function () {
-    if (tree_loaded) {
+    if (this.tree_loaded) {
       // canvas details
       this.canvas_height = this.canvas.clientHeight;
       this.canvas_width = this.canvas.clientWidth;
 
-      // set the helper tile widths
-      this.helper.tile_width = this.canvas_width / tiles_wide;
-      this.helper.tile_height = this.canvas_height / tiles_high;
+      // scale by tile width to get the correct dimensions
+      this.context.save();
+
+      // Dangerous: The next lines define a possibly dangerous hack
+      this.context.tile_width = this.canvas_width / this.tiles_wide;
+      this.context.tile_height = this.canvas_height / this.tiles_high;
+
+      this.context.lineWidth = 1;
 
       // clear the screen
-      this.context.clearRect(0, 0, this.canvas_width, this.canvas_height)
+      this.context.clearRect(0, 0, this.tiles_wide, this.tiles_high)
 
       this.helper.draw(this.tree, this.context);
+      this.context.restore();
     } else {
       this.error_message = "draw: The tree has not been (or could not be) loaded so it cannot be drawn";
       return false;
