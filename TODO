@@ -1,6 +1,7 @@
-- 1.Readme file
-  2.Color for the entire graph and evaluation of all the nodes.
-  3.Text in the node boxes.
-  4.More test cases.
-  5.A zoom feature for large graphs.
+- 1.Use objects instead of variables.
+- 2.Readme file
+  3.Color for the entire graph and evaluation of all the nodes.
+  4.Text in the node boxes.
+  5.More test cases.
+  6.A zoom feature for large graphs.
       1.Javascript keys to navigate once it has been zoomed.
