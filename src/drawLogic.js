@@ -4,6 +4,10 @@ function DefaultLogicTreeSettings() {
   this.sideLines = true;
   this.nodeNameRequired = true;
   this.nodeBoxHeight = 0.75;
+
+  this.trueColor = "#00FF00";   // green
+  this.falseColor = "#FF0000";  // red
+  this.maybeColor = "#FFFF00";  // yellow
 }
 
 function DefaultLogicTreeHelper () {
@@ -97,6 +101,48 @@ function DefaultLogicTreeHelper () {
     }
   });
 
+  this.calculateBooleanResult = (function (tree) {
+      if (tree.type == "Op") {
+        var b1 = this.calculateBooleanResult(tree.child[0]);
+        var b2 = this.calculateBooleanResult(tree.child[1]);
+        var result;
+        if (tree.value == "and") {
+          result = this.complicatedAnd(b1, b2);
+        } else {
+          result = this.complicatedOr(b1, b2);
+        }
+
+        tree.child[0].parentResult = result;
+        tree.child[1].parentResult = result;
+        tree.childResult = result;
+        return result;
+      }
+
+      // Otherwise just return the node value
+      return tree.value;
+  });
+
+  this.complicatedAnd = (function (b1, b2) {
+      if (b1 == "false" || b2 == "false") {
+        return "false";
+      } else if (b1 == "maybe" || b2 == "maybe") {
+        return "maybe";
+      }
+
+      // no falses or maybe's so all that is left is true's
+      return "true";
+  });
+
+  this.complicatedOr = (function (b1, b2) {
+      if (b1 == "true" || b2 == "true") {
+        return "true";
+      } else if (b1 == "maybe" || b2 == "maybe") {
+        return "maybe";
+      }
+
+      return "false";
+  });
+
   this.draw = (function (tree, context) {
     if (tree.type == "Op") {
       if (tree.value == "and") {
@@ -110,7 +156,8 @@ function DefaultLogicTreeHelper () {
   });
 
   this.drawNode = (function (tree, context) {
-    context.sStrokeRect(tree.start_x, tree.start_y - (this.settings.nodeBoxHeight / 2), tree.width, this.settings.nodeBoxHeight);
+    var maxNodeHeight = Math.min(this.settings.nodeBoxHeight, context.tile_height);
+    context.sStrokeRect(tree.start_x, tree.start_y - (maxNodeHeight / 2), tree.width, maxNodeHeight);
   });
 
   this.drawOr = (function (tree, context) {
@@ -201,6 +248,10 @@ function LogicTree() {
     this.tree.start_x = this.helper.settings.sideLines ? 1 : 0;
     this.tree.start_y = this.tree.height / 2;
     this.helper.calculateChildPosition(this.tree);
+
+    // calculate the result of the tree
+    this.tree.parentResult = "true";  // by default
+    this.helper.calculateBooleanResult(this.tree);
     
     this.dodgyExtendContextToMakeItEasyForMe();
 

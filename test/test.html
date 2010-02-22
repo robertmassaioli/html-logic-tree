@@ -4,19 +4,29 @@
     <script type='text/javascript' src='../src/drawLogic.js'></script>
     <script type='text/javascript' src='tests.js'></script>
     <script type='text/javascript'>
+      // this array is for debugging purposes, you can actually just use one LogicTree for
+      // all the tests and it will still work exactly the same way.
+      var logicTrees = new Array(); 
+
       function startEverything() {
-        // create one logic tree
-        var myLogicTree = new LogicTree();
         var testArea = document.getElementById('testArea');
         for (test in testData) {
+          // create the new objects
           var newCanvas = document.createElement('canvas');
           var desc = document.createElement('p');
+          var myLogicTree = new LogicTree();
+          logicTrees.push(myLogicTree);
+
+          // set the objects up
           desc.innerHTML = "Test " + test + ":";
+          newCanvas.height = "300";
+          newCanvas.width = "600";
 
           // append the items to the div
           testArea.appendChild(desc);
           testArea.appendChild(newCanvas);
 
+          // draw the logic tree
           myLogicTree.init(testData[test], newCanvas);
           myLogicTree.draw();
         }
