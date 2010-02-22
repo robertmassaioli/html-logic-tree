@@ -4,7 +4,7 @@ var testData = new Array();
 testData.push ({
         name: "node",
         type: "Val",
-        value: "true"
+        value: "false"
     });
 
 // a test for the and operator
@@ -208,7 +208,7 @@ testData.push ({
                 {
                     "name": "D",
                     "type": "Val",
-                    "value": "true"
+                    "value": "maybe"
                 }]
             },
             {

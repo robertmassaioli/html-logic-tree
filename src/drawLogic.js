@@ -103,22 +103,38 @@ function DefaultLogicTreeHelper () {
 
   this.calculateBooleanResult = (function (tree) {
       if (tree.type == "Op") {
-        var b1 = this.calculateBooleanResult(tree.child[0]);
-        var b2 = this.calculateBooleanResult(tree.child[1]);
-        var result;
+        var b0, b1;
+
+        // setup the inputs
         if (tree.value == "and") {
-          result = this.complicatedAnd(b1, b2);
+          tree.child[0].parentIn = tree.parentIn;
+          b0 = this.calculateBooleanResult(tree.child[0]);
+          tree.child[1].parentIn = tree.child[0].out;
         } else {
-          result = this.complicatedOr(b1, b2);
+          tree.child[0].parentIn = tree.parentIn;
+          tree.child[1].parentIn = tree.parentIn;
+
+          b0 = this.calculateBooleanResult(tree.child[0]);
         }
 
-        tree.child[0].parentResult = result;
-        tree.child[1].parentResult = result;
-        tree.childResult = result;
+        // evaluate the right child node
+        b1 = this.calculateBooleanResult(tree.child[1]);
+
+        // Calculate the result
+        var result;
+        if (tree.value == "and") {
+          result = this.complicatedAnd(b0, b1);
+        } else {
+          result = this.complicatedOr(b0, b1);
+        }
+
+        // set the results
+        tree.out = result;
         return result;
       }
 
       // Otherwise just return the node value
+      tree.out = this.complicatedAnd(tree.parentIn, tree.value);
       return tree.value;
   });
 
@@ -143,6 +159,16 @@ function DefaultLogicTreeHelper () {
       return "false";
   });
 
+  this.pickColor = (function (result) {
+      if (result == "true") {
+        return this.settings.trueColor;
+      } else if (result == "false") {
+        return this.settings.falseColor;
+      }
+
+      return this.settings.maybeColor;
+  });
+
   this.draw = (function (tree, context) {
     if (tree.type == "Op") {
       if (tree.value == "and") {
@@ -156,18 +182,33 @@ function DefaultLogicTreeHelper () {
   });
 
   this.drawNode = (function (tree, context) {
+    context.strokeStyle = "#000000";
     var maxNodeHeight = Math.min(this.settings.nodeBoxHeight, context.tile_height);
+    var my_gradient = context.createLinearGradient(0, 0, context.canvas.width, 0);
+
+    // small hack
+    my_gradient.sAddColorStop = function (amount, color, context) {this.addColorStop((amount * context.tile_width) / context.canvas.width, color)}
+
+    my_gradient.addColorStop(0.0, this.pickColor(tree.parentIn));
+    my_gradient.sAddColorStop(tree.start_x, this.pickColor(tree.parentIn), context);
+    my_gradient.sAddColorStop(tree.start_x + 1, this.pickColor(tree.out), context);
+    my_gradient.addColorStop(1.0, this.pickColor(tree.out));
+
+    context.fillStyle = my_gradient;
+    context.sFillRect(tree.start_x, tree.start_y - (maxNodeHeight / 2), tree.width, maxNodeHeight);
     context.sStrokeRect(tree.start_x, tree.start_y - (maxNodeHeight / 2), tree.width, maxNodeHeight);
   });
 
   this.drawOr = (function (tree, context) {
     for (i in tree.child) {
+      context.strokeStyle = this.pickColor(tree.parentIn);
       context.beginPath();
       context.sMoveTo(tree.start_x, tree.start_y);
       context.sLineTo(tree.start_x, tree.child[i].start_y);
       context.sLineTo(tree.child[i].start_x, tree.child[i].start_y);
       context.stroke();
 
+      context.strokeStyle = this.pickColor(tree.child[i].out);
       context.beginPath();
       context.sMoveTo(tree.child[i].start_x + tree.child[i].width, tree.child[i].start_y);
       context.sLineTo(tree.start_x + tree.width, tree.child[i].start_y);
@@ -179,6 +220,7 @@ function DefaultLogicTreeHelper () {
   });
 
   this.drawAnd = (function (tree, context) {
+    context.strokeStyle = this.pickColor(tree.child[0].out);
     context.beginPath();
     context.sMoveTo(tree.child[1].start_x - 1, tree.child[1].start_y);
     context.sLineTo(tree.child[1].start_x, tree.child[1].start_y);
@@ -190,11 +232,13 @@ function DefaultLogicTreeHelper () {
 
   this.drawSideBars = (function (tree, context) {
     if (this.settings.sideLines === true) {
+      context.strokeStyle = this.pickColor(tree.parentIn);
       context.beginPath();
       context.sMoveTo(0, tree.start_y);
       context.sLineTo(tree.start_x, tree.start_y);
       context.stroke();
 
+      context.strokeStyle = this.pickColor(tree.out);
       context.beginPath();
       context.sMoveTo(context.tiles_wide, tree.start_y);
       context.sLineTo(context.tiles_wide - 1, tree.start_y);
@@ -250,8 +294,8 @@ function LogicTree() {
     this.helper.calculateChildPosition(this.tree);
 
     // calculate the result of the tree
-    this.tree.parentResult = "true";  // by default
-    this.helper.calculateBooleanResult(this.tree);
+    this.tree.parentIn = "true";  // by default
+    this.tree.out = this.helper.calculateBooleanResult(this.tree);
     
     this.dodgyExtendContextToMakeItEasyForMe();
 
@@ -263,6 +307,7 @@ function LogicTree() {
     this.context.sLineTo = function (x, y) {this.lineTo(x * this.tile_width, y * this.tile_height)}
     this.context.sMoveTo = function (x, y) {this.moveTo(x * this.tile_width, y * this.tile_height)}
     this.context.sStrokeRect = function (x, y, w, h) {this.strokeRect(x * this.tile_width, y * this.tile_height, w * this.tile_width, h * this.tile_height)}
+    this.context.sFillRect = function (x, y, w, h) {this.fillRect(x * this.tile_width, y * this.tile_height, w * this.tile_width, h * this.tile_height)}
   });
 
   this.draw = (function () {
