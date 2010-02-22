@@ -82,8 +82,8 @@ LogicTreeHelper = {
         tree.child[0].start_y = tree.start_y;
         tree.child[1].start_y = tree.start_y;
       } else {
-        tree.child[0].start_x = tree.start_x + 1;
-        tree.child[1].start_x = tree.start_x + 1;
+        tree.child[0].start_x = tree.start_x + (tree.width - tree.child[0].width) / 2;
+        tree.child[1].start_x = tree.start_x + (tree.width - tree.child[1].width) / 2;
 
         tree.child[0].start_y = tree.start_y - (tree.height / 2) + (tree.child[0].height / 2);
         tree.child[1].start_y = tree.start_y + (tree.height / 2) - (tree.child[1].height / 2);
@@ -117,8 +117,8 @@ LogicTreeHelper = {
 
       context.beginPath();
       context.sMoveTo(tree.child[i].start_x + tree.child[i].width, tree.child[i].start_y);
-      context.sLineTo(tree.child[i].start_x + tree.child[i].width + 1, tree.child[i].start_y);
-      context.sLineTo(tree.child[i].start_x + tree.child[i].width + 1, tree.start_y);
+      context.sLineTo(tree.start_x + tree.width, tree.child[i].start_y);
+      context.sLineTo(tree.start_x + tree.width, tree.start_y);
       context.stroke();
 
       this.draw(tree.child[i], context);
@@ -159,7 +159,7 @@ LogicTree = {
   error_message : null,
 
   init : function (a_tree, a_canvas) {
-    tree_loaded = false;
+    this.tree_loaded = false;
     if (!a_tree) { 
       this.error_message = "init: Tree was null";
       return false;
@@ -220,7 +220,7 @@ LogicTree = {
       this.context.lineWidth = 1;
 
       // clear the screen
-      this.context.clearRect(0, 0, this.tiles_wide, this.tiles_high);
+      this.context.clearRect(0, 0, this.context.tiles_wide, this.context.tiles_high);
 
       this.helper.drawSideBars(this.tree, this.context);
       this.helper.draw(this.tree, this.context);
