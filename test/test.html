@@ -11,7 +11,7 @@
         for (test in testData) {
           var newCanvas = document.createElement('canvas');
           var desc = document.createElement('p');
-          desc.innerText = "Test " + test + ":";
+          desc.innerHTML = "Test " + test + ":";
 
           // append the items to the div
           testArea.appendChild(desc);

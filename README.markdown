@@ -2,11 +2,30 @@ HTML5 Logic Tree
 ================
 
 Author: Robert Massaioli
+Project Started: 22 Feb 2010
 
-This contains some javascript and other code to render awesome trees from just a simple string like:
+Purpose
+-------
 
-    A and B
+The purpose of this project is to create a suite where a programmer can type in a logical expression, 
+made up purely of boolean values, and get a pretty image rendered to the screen.
 
-    True or (True and False)
+Example in 30 Seconds
+---------------------
 
-This README is just a stub for now and is yet to be expanded.
+So you want to see an example of this in thirty seconds? Then seeing the test data in action is what you want:
+
+1.  Checkout html5-logic-tree from GitHub.
+2.  cd html5-logic-tree
+3.  Use the (supported) browser of your choice to open 'test.html'.
+    For example:
+    google-chrome test/test.html
+4.  Win!
+
+Supported Browsers
+------------------
+
++ Google Chrome
++ Firefox
+
+However, any browser that supports HTML5 canvas objects should be acceptable.
