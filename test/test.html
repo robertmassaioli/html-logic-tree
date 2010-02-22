@@ -1,21 +1,35 @@
 <html>
   <head>
     <title>HTML5 Canvas Test</title>
-    <script type='text/javascript' src='drawLogic.js'></script>
+    <script type='text/javascript' src='../src/drawLogic.js'></script>
     <script type='text/javascript' src='tests.js'></script>
     <script type='text/javascript'>
       function startEverything() {
-        var drawingCanvas = document.getElementById('drawing');
-
+        // create one logic tree
         var myLogicTree = new LogicTree();
-        myLogicTree.init(test7(), drawingCanvas);
-        myLogicTree.draw();
+        var testArea = document.getElementById('testArea');
+        for (test in testData) {
+          var newCanvas = document.createElement('canvas');
+          var desc = document.createElement('p');
+          desc.innerText = "Test " + test + ":";
+
+          // append the items to the div
+          testArea.appendChild(desc);
+          testArea.appendChild(newCanvas);
+
+          myLogicTree.init(testData[test], newCanvas);
+          myLogicTree.draw();
+        }
       }
   </script>
   </head>
   <body onload='javascript:startEverything()'>
-    <canvas id="drawing" width="600" height="300">
-    <p>Your browser doesn't support canvas.</p>
-    </canvas>
+    <h1>Full Test Suite</h1>
+    <p>
+      This is a page that just displays all of the tests in a brief overview for the purpose of quickly 
+      seeing if anything is broken. It shows you the current state of the project. The tests are ordered,
+      roughly, from simplest to most difficult.
+    </p>
+    <div id='testArea'></div>
   </body>
 </html>

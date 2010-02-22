@@ -1,15 +1,14 @@
 // test for basic node
-function test1() {
-    return ({
+var testData = new Array();
+
+testData[0] = ({
         name: "node",
         type: "Val",
         value: "true"
     });
-}
 
 // a test for the and operator
-function test2() {
-    return ({
+testData[1] = ({
         type: "Op",
         value: "and",
         child: [{
@@ -23,11 +22,9 @@ function test2() {
             value: "false"
         }]
     });
-}
 
 // same as two but the Or operator
-function test3() {
-    return ({
+testData[2] = ({
         type: "Op",
         value: "or",
         child: [{
@@ -41,11 +38,9 @@ function test3() {
             value: "false"
         }]
     });
-}
 
 // same as two but the Or operator
-function test4() {
-    return ({
+testData[3] = ({
         "type": "Op",
         "value": "and",
         "child": [{
@@ -77,10 +72,8 @@ function test4() {
             }]
         }]
     });
-}
 
-function test5() {
-    return ({
+testData[4] = ({
         "type": "Op",
         "value": "or",
         "child": [{
@@ -112,11 +105,9 @@ function test5() {
             }]
         }]
     });
-}
 
 // same as two but the Or operator
-function test6() {
-    return ({
+testData[5] = ({
         "type": "Op",
         "value": "and",
         "child": [{
@@ -139,11 +130,9 @@ function test6() {
             "value": "true"
         }]
     });
-}
 
 // This is two or's
-function test7() {
-    return ({
+testData[6] = ({
         "type": "Op",
         "value": "or",
         "child": [{
@@ -166,4 +155,3 @@ function test7() {
             "value": "true"
         }]
     });
-}
