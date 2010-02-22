@@ -1,14 +1,14 @@
-LogicTreeSettings = {
-  nodeHeight : 2,
-  nodeWidth : 1,
-  sideLines : true,
-  nodeNameRequired : true,
-  nodeBoxHeight : 0.75
+function DefaultLogicTreeSettings() {
+  this.nodeHeight = 2;
+  this.nodeWidth = 1;
+  this.sideLines = true;
+  this.nodeNameRequired = true;
+  this.nodeBoxHeight = 0.75;
 }
 
-LogicTreeHelper = {
-  settings : LogicTreeSettings,
-  isValid : function (tree) {
+function DefaultLogicTreeHelper () {
+  this.settings = new DefaultLogicTreeSettings();
+  this.isValid = (function (tree) {
     // TODO See if this function is nicer by starting with valid = false
     var valid = true;
 
@@ -48,8 +48,9 @@ LogicTreeHelper = {
     }
 
     return valid;
-  },
-  calculateHeight : function (tree) {
+  });
+
+  this.calculateHeight = (function (tree) {
     if (tree.type == "Val") {
       tree.height = this.settings.nodeHeight; // default
     } else if (tree.value == "and") {
@@ -60,8 +61,9 @@ LogicTreeHelper = {
       tree.height = -1; // obviously an error
     }
     return tree.height;
-  },
-  calculateWidth : function (tree) {
+  });
+
+  this.calculateWidth = (function (tree) {
     if (tree.type == "Val") {
       tree.width = this.settings.nodeWidth; // default
     } else if (tree.value == "and") {
@@ -72,8 +74,9 @@ LogicTreeHelper = {
       tree.width = -1; // obviously an error
     }
     return tree.width;
-  },
-  calculateChildPosition : function (tree) {
+  });
+
+  this.calculateChildPosition = (function (tree) {
     if (tree.type == "Op") {  // node positions not required
       if (tree.value == "and") {
         tree.child[0].start_x = tree.start_x;
@@ -92,8 +95,9 @@ LogicTreeHelper = {
       this.calculateChildPosition(tree.child[0]);
       this.calculateChildPosition(tree.child[1]);
     }
-  },
-  draw : function (tree, context) {
+  });
+
+  this.draw = (function (tree, context) {
     if (tree.type == "Op") {
       if (tree.value == "and") {
         this.drawAnd(tree, context);
@@ -103,11 +107,13 @@ LogicTreeHelper = {
     } else {
       this.drawNode(tree, context);
     }
-  },
-  drawNode : function (tree, context) {
+  });
+
+  this.drawNode = (function (tree, context) {
     context.sStrokeRect(tree.start_x, tree.start_y - (this.settings.nodeBoxHeight / 2), tree.width, this.settings.nodeBoxHeight);
-  },
-  drawOr : function (tree, context) {
+  });
+
+  this.drawOr = (function (tree, context) {
     for (i in tree.child) {
       context.beginPath();
       context.sMoveTo(tree.start_x, tree.start_y);
@@ -123,8 +129,9 @@ LogicTreeHelper = {
 
       this.draw(tree.child[i], context);
     }
-  },
-  drawAnd : function (tree, context) {
+  });
+
+  this.drawAnd = (function (tree, context) {
     context.beginPath();
     context.sMoveTo(tree.child[1].start_x - 1, tree.child[1].start_y);
     context.sLineTo(tree.child[1].start_x, tree.child[1].start_y);
@@ -132,8 +139,9 @@ LogicTreeHelper = {
 
     this.draw(tree.child[0], context);
     this.draw(tree.child[1], context);
-  },
-  drawSideBars : function (tree, context) {
+  });
+
+  this.drawSideBars = (function (tree, context) {
     if (this.settings.sideLines === true) {
       context.beginPath();
       context.sMoveTo(0, tree.start_y);
@@ -145,20 +153,20 @@ LogicTreeHelper = {
       context.sLineTo(context.tiles_wide - 1, tree.start_y);
       context.stroke();
     }
-  }
+  });
 }
 
-LogicTree = {
-  helper : LogicTreeHelper,
-  canvas : null,
-  context : null,
-  tree : null,
-  canvas_width : 0,
-  canvas_height : 0,
-  tree_loaded : false,
-  error_message : null,
+function LogicTree() {
+  this.helper = new DefaultLogicTreeHelper();
+  this.canvas = null;
+  this.context = null;
+  this.tree = null;
+  this.canvas_width = 0;
+  this.canvas_height = 0;
+  this.tree_loaded = false;
+  this.error_message = null;
 
-  init : function (a_tree, a_canvas) {
+  this.init = (function (a_tree, a_canvas) {
     this.tree_loaded = false;
     if (!a_tree) { 
       this.error_message = "init: Tree was null";
@@ -198,13 +206,15 @@ LogicTree = {
 
     this.tree_loaded = true;
     return true;
-  },
-  dodgyExtendContextToMakeItEasyForMe : function () {
+  });
+  
+  this.dodgyExtendContextToMakeItEasyForMe = (function () {
     this.context.sLineTo = function (x, y) {this.lineTo(x * this.tile_width, y * this.tile_height)}
     this.context.sMoveTo = function (x, y) {this.moveTo(x * this.tile_width, y * this.tile_height)}
     this.context.sStrokeRect = function (x, y, w, h) {this.strokeRect(x * this.tile_width, y * this.tile_height, w * this.tile_width, h * this.tile_height)}
-  },
-  draw : function () {
+  });
+
+  this.draw = (function () {
     if (this.tree_loaded) {
       // canvas details
       this.canvas_height = this.canvas.clientHeight;
@@ -231,5 +241,5 @@ LogicTree = {
     }
 
     return true;
-  }
+  });
 }

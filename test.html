@@ -4,11 +4,10 @@
     <script type='text/javascript' src='drawLogic.js'></script>
     <script type='text/javascript' src='tests.js'></script>
     <script type='text/javascript'>
-      var myLogicTree = LogicTree;
-
       function startEverything() {
         var drawingCanvas = document.getElementById('drawing');
 
+        var myLogicTree = new LogicTree();
         myLogicTree.init(test7(), drawingCanvas);
         myLogicTree.draw();
       }
