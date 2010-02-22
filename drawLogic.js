@@ -2,7 +2,8 @@ LogicTreeSettings = {
   nodeHeight : 2,
   nodeWidth : 1,
   sideLines : true,
-  nodeNameRequired : true
+  nodeNameRequired : true,
+  nodeBoxHeight : 0.75
 }
 
 LogicTreeHelper = {
@@ -87,6 +88,9 @@ LogicTreeHelper = {
         tree.child[0].start_y = tree.start_y - (tree.height / 2) + (tree.child[0].height / 2);
         tree.child[1].start_y = tree.start_y + (tree.height / 2) - (tree.child[1].height / 2);
       }
+
+      this.calculateChildPosition(tree.child[0]);
+      this.calculateChildPosition(tree.child[1]);
     }
   },
   draw : function (tree, context) {
@@ -101,6 +105,7 @@ LogicTreeHelper = {
     }
   },
   drawNode : function (tree, context) {
+    context.sStrokeRect(tree.start_x, tree.start_y - (this.settings.nodeBoxHeight / 2), tree.width, this.settings.nodeBoxHeight);
   },
   drawOr : function (tree, context) {
     for (i in tree.child) {
@@ -120,6 +125,26 @@ LogicTreeHelper = {
     }
   },
   drawAnd : function (tree, context) {
+    context.beginPath();
+    context.sMoveTo(tree.child[1].start_x - 1, tree.child[1].start_y);
+    context.sLineTo(tree.child[1].start_x, tree.child[1].start_y);
+    context.stroke();
+
+    this.draw(tree.child[0], context);
+    this.draw(tree.child[1], context);
+  },
+  drawSideBars : function (tree, context) {
+    if (this.settings.sideLines === true) {
+      context.beginPath();
+      context.sMoveTo(0, tree.start_y);
+      context.sLineTo(tree.start_x, tree.start_y);
+      context.stroke();
+
+      context.beginPath();
+      context.sMoveTo(context.tiles_wide, tree.start_y);
+      context.sLineTo(context.tiles_wide - 1, tree.start_y);
+      context.stroke();
+    }
   }
 }
 
@@ -130,8 +155,6 @@ LogicTree = {
   tree : null,
   canvas_width : 0,
   canvas_height : 0,
-  tiles_wide : 0,
-  tiles_high : 0,
   tree_loaded : false,
   error_message : null,
 
@@ -164,8 +187,8 @@ LogicTree = {
 
 
     // tile details
-    this.tiles_wide = this.helper.calculateWidth(this.tree) + (this.helper.settings.sideLines ? 2 : 0);
-    this.tiles_high = this.helper.calculateHeight(this.tree);
+    this.context.tiles_wide = this.helper.calculateWidth(this.tree) + (this.helper.settings.sideLines ? 2 : 0);
+    this.context.tiles_high = this.helper.calculateHeight(this.tree);
 
     this.tree.start_x = this.helper.settings.sideLines ? 1 : 0;
     this.tree.start_y = this.tree.height / 2;
@@ -179,6 +202,7 @@ LogicTree = {
   dodgyExtendContextToMakeItEasyForMe : function () {
     this.context.sLineTo = function (x, y) {this.lineTo(x * this.tile_width, y * this.tile_height)}
     this.context.sMoveTo = function (x, y) {this.moveTo(x * this.tile_width, y * this.tile_height)}
+    this.context.sStrokeRect = function (x, y, w, h) {this.strokeRect(x * this.tile_width, y * this.tile_height, w * this.tile_width, h * this.tile_height)}
   },
   draw : function () {
     if (this.tree_loaded) {
@@ -190,14 +214,15 @@ LogicTree = {
       this.context.save();
 
       // Dangerous: The next lines define a possibly dangerous hack
-      this.context.tile_width = this.canvas_width / this.tiles_wide;
-      this.context.tile_height = this.canvas_height / this.tiles_high;
+      this.context.tile_width = this.canvas_width / this.context.tiles_wide;
+      this.context.tile_height = this.canvas_height / this.context.tiles_high;
 
       this.context.lineWidth = 1;
 
       // clear the screen
-      this.context.clearRect(0, 0, this.tiles_wide, this.tiles_high)
+      this.context.clearRect(0, 0, this.tiles_wide, this.tiles_high);
 
+      this.helper.drawSideBars(this.tree, this.context);
       this.helper.draw(this.tree, this.context);
       this.context.restore();
     } else {
