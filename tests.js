@@ -12,7 +12,7 @@ function test2() {
   return ({
       type : "Op",
       value : "and",
-      children : [
+      child : [
           {
               name : "A",
               type : "Val",
@@ -32,7 +32,7 @@ function test3() {
   return ({
       type : "Op",
       value : "or",
-      children : [
+      child : [
           {
               name : "A",
               type : "Val",
@@ -53,11 +53,11 @@ function test4() {
 {
     "type" : "Op",
     "value" : "and",
-    "children" : [
+    "child" : [
         {
             "type" : "Op",
             "value" : "or",
-            "children" : [
+            "child" : [
                 {
                     "name" : "A",
                     "type" : "Val",
@@ -73,7 +73,7 @@ function test4() {
         {
             "type" : "Op",
             "value" : "or",
-            "children" : [
+            "child" : [
                 {
                     "name" : "C",
                     "type" : "Val",
