@@ -1,2 +1,9 @@
+# Ignore some basics
 *.hi
 *~
+
+# Ignore devtodo database
+.todo
+
+# Ignore the build directory
+bin
