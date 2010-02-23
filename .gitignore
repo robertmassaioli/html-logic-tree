@@ -1,6 +1,7 @@
 # Ignore some basics
 *.hi
 *~
+*.swp
 
 # Ignore devtodo database
 .todo
