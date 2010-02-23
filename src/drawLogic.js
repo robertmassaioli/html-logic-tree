@@ -8,6 +8,12 @@ function DefaultLogicTreeSettings() {
   this.trueColor = "#00FF00";   // green
   this.falseColor = "#FF0000";  // red
   this.maybeColor = "#FFFF00";  // yellow
+
+  // font settings
+  this.font = new Object();
+  this.font.weight = "bold";
+  this.font.size = 30;
+  this.font.style = "sans-serif";
 }
 
 function DefaultLogicTreeHelper () {
@@ -191,12 +197,16 @@ function DefaultLogicTreeHelper () {
 
     my_gradient.addColorStop(0.0, this.pickColor(tree.parentIn));
     my_gradient.sAddColorStop(tree.start_x, this.pickColor(tree.parentIn), context);
-    my_gradient.sAddColorStop(tree.start_x + 1, this.pickColor(tree.out), context);
+    my_gradient.sAddColorStop(tree.start_x + tree.width, this.pickColor(tree.out), context);
     my_gradient.addColorStop(1.0, this.pickColor(tree.out));
 
     context.fillStyle = my_gradient;
     context.sFillRect(tree.start_x, tree.start_y - (maxNodeHeight / 2), tree.width, maxNodeHeight);
     context.sStrokeRect(tree.start_x, tree.start_y - (maxNodeHeight / 2), tree.width, maxNodeHeight);
+
+    context.strokeStyle = "#000000";
+    context.fillStyle = "#000000";
+    context.sFillText(tree.name, tree.start_x + (tree.width / 2), tree.start_y, tree.width - 0.01, maxNodeHeight);
   });
 
   this.drawOr = (function (tree, context) {
@@ -308,6 +318,17 @@ function LogicTree() {
     this.context.sMoveTo = function (x, y) {this.moveTo(x * this.tile_width, y * this.tile_height)}
     this.context.sStrokeRect = function (x, y, w, h) {this.strokeRect(x * this.tile_width, y * this.tile_height, w * this.tile_width, h * this.tile_height)}
     this.context.sFillRect = function (x, y, w, h) {this.fillRect(x * this.tile_width, y * this.tile_height, w * this.tile_width, h * this.tile_height)}
+    this.context.sStrokeText = function (text, x, y, maxWidth) {this.strokeText(text, x * this.tile_width, y * this.tile_height, maxWidth)}
+    this.context.sFillText = function (text, x, y, maxWidth, maxHeight) {
+      var temp_font = this.font.split(" ");
+      var fontSize = parseInt(temp_font[1]);
+      if (fontSize > maxHeight * this.tile_height) {
+        fontSize = (maxHeight * this.tile_height) - 1;
+        temp_font[1] = fontSize + "px";
+        this.font = temp_font.join(' ');
+      }
+      this.fillText(text, x * this.tile_width, y * this.tile_height + (fontSize / 3), maxWidth * this.tile_width)
+    }
   });
 
   this.draw = (function () {
@@ -327,6 +348,8 @@ function LogicTree() {
 
       // clear the screen
       this.context.clearRect(0, 0, this.context.tiles_wide, this.context.tiles_high);
+      this.context.textAlign = "center";
+      this.context.font = this.helper.settings.font.weight + ' ' + this.helper.settings.font.size + 'px ' + this.helper.settings.font.style;
 
       this.helper.drawSideBars(this.tree, this.context);
       this.helper.draw(this.tree, this.context);

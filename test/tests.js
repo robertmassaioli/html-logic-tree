@@ -259,3 +259,10 @@ testData.push({
         }]
     }]
 });
+
+testDataInfo.push("A Basic node with a really long name.");
+testData.push({
+    name: "really long name",
+    type: "Val",
+    value: "false"
+});

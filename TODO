@@ -1,10 +1,10 @@
 - 1.Color for the entire graph and evaluation of all the nodes.
-- 2.Use objects instead of variables.
-- 3.copyright file
-- 4.More test cases.
+- 2.Text in the node boxes.
+- 3.Use objects instead of variables.
+- 4.copyright file
+- 5.More test cases.
     - 1.show all test cases at once on the one page
-- 5.Readme file
-  6.Text in the node boxes.
+- 6.Readme file
   7.Provide complete documentation
       1.Full working example
       2.Tell people how to change the settings
