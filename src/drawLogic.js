@@ -14,10 +14,56 @@ function DefaultLogicTreeSettings() {
   this.font.weight = "bold";
   this.font.size = 30;
   this.font.style = "sans-serif";
+
+  // font color
+  this.font.defaultColor = null; // if this is set then the others are ignored
+  this.font.trueColor = "black";
+  this.font.falseColor = "black";
+  this.font.maybeColor = "black";
+  this.font.trueToMaybeColor = "grey";
+  this.font.trueToFalseColor = "violet";
+  this.font.maybeToFalseColor = "blue";
+
+  this.font.chooseColor = (function (from, to) {
+    if (this.defaultColor != null) return this.defaultColor;
+
+    if (from === to) { // simple color
+      switch(from) {
+        case 'true':
+          return this.trueColor;
+        case 'false':
+          return this.falseColor;
+        case 'maybe':
+          return this.maybeColor;
+      }
+    } else {
+      if(from == 'true') {
+        if (to == 'maybe') {
+          return this.trueToMaybeColor;
+        } else {
+          return this.trueToFalseColor;
+        }
+      } else {
+        return this.maybeToFalseColor;
+      }
+    }
+
+    return this.defaultColor;
+  });
+
+  this.pickColor = (function (result) {
+      if (result == "true") {
+        return this.trueColor;
+      } else if (result == "false") {
+        return this.falseColor;
+      }
+
+      return this.maybeColor;
+  });
 }
 
 function DefaultLogicTreeHelper () {
-  this.settings = new DefaultLogicTreeSettings();
+  this.settings = null; // this object is not defined by default
   this.isValid = (function (tree) {
     // TODO See if this function is nicer by starting with valid = false
     var valid = true;
@@ -165,16 +211,6 @@ function DefaultLogicTreeHelper () {
       return "false";
   });
 
-  this.pickColor = (function (result) {
-      if (result == "true") {
-        return this.settings.trueColor;
-      } else if (result == "false") {
-        return this.settings.falseColor;
-      }
-
-      return this.settings.maybeColor;
-  });
-
   this.draw = (function (tree, context) {
     if (tree.type == "Op") {
       if (tree.value == "and") {
@@ -195,30 +231,29 @@ function DefaultLogicTreeHelper () {
     // small hack
     my_gradient.sAddColorStop = function (amount, color, context) {this.addColorStop((amount * context.tile_width) / context.canvas.width, color)}
 
-    my_gradient.addColorStop(0.0, this.pickColor(tree.parentIn));
-    my_gradient.sAddColorStop(tree.start_x, this.pickColor(tree.parentIn), context);
-    my_gradient.sAddColorStop(tree.start_x + tree.width, this.pickColor(tree.out), context);
-    my_gradient.addColorStop(1.0, this.pickColor(tree.out));
+    my_gradient.addColorStop(0.0, this.settings.pickColor(tree.parentIn));
+    my_gradient.sAddColorStop(tree.start_x, this.settings.pickColor(tree.parentIn), context);
+    my_gradient.sAddColorStop(tree.start_x + tree.width, this.settings.pickColor(tree.out), context);
+    my_gradient.addColorStop(1.0, this.settings.pickColor(tree.out));
 
     context.fillStyle = my_gradient;
     context.sFillRect(tree.start_x, tree.start_y - (maxNodeHeight / 2), tree.width, maxNodeHeight);
     context.sStrokeRect(tree.start_x, tree.start_y - (maxNodeHeight / 2), tree.width, maxNodeHeight);
 
-    context.strokeStyle = "#000000";
-    context.fillStyle = "#000000";
+    context.fillStyle = this.settings.font.chooseColor(tree.parentIn, tree.out);
     context.sFillText(tree.name, tree.start_x + (tree.width / 2), tree.start_y, tree.width - 0.01, maxNodeHeight);
   });
 
   this.drawOr = (function (tree, context) {
     for (i in tree.child) {
-      context.strokeStyle = this.pickColor(tree.parentIn);
+      context.strokeStyle = this.settings.pickColor(tree.parentIn);
       context.beginPath();
       context.sMoveTo(tree.start_x, tree.start_y);
       context.sLineTo(tree.start_x, tree.child[i].start_y);
       context.sLineTo(tree.child[i].start_x, tree.child[i].start_y);
       context.stroke();
 
-      context.strokeStyle = this.pickColor(tree.child[i].out);
+      context.strokeStyle = this.settings.pickColor(tree.child[i].out);
       context.beginPath();
       context.sMoveTo(tree.child[i].start_x + tree.child[i].width, tree.child[i].start_y);
       context.sLineTo(tree.start_x + tree.width, tree.child[i].start_y);
@@ -230,7 +265,7 @@ function DefaultLogicTreeHelper () {
   });
 
   this.drawAnd = (function (tree, context) {
-    context.strokeStyle = this.pickColor(tree.child[0].out);
+    context.strokeStyle = this.settings.pickColor(tree.child[0].out);
     context.beginPath();
     context.sMoveTo(tree.child[1].start_x - 1, tree.child[1].start_y);
     context.sLineTo(tree.child[1].start_x, tree.child[1].start_y);
@@ -242,13 +277,13 @@ function DefaultLogicTreeHelper () {
 
   this.drawSideBars = (function (tree, context) {
     if (this.settings.sideLines === true) {
-      context.strokeStyle = this.pickColor(tree.parentIn);
+      context.strokeStyle = this.settings.pickColor(tree.parentIn);
       context.beginPath();
       context.sMoveTo(0, tree.start_y);
       context.sLineTo(tree.start_x, tree.start_y);
       context.stroke();
 
-      context.strokeStyle = this.pickColor(tree.out);
+      context.strokeStyle = this.settings.pickColor(tree.out);
       context.beginPath();
       context.sMoveTo(context.tiles_wide, tree.start_y);
       context.sLineTo(context.tiles_wide - 1, tree.start_y);
@@ -257,8 +292,19 @@ function DefaultLogicTreeHelper () {
   });
 }
 
-function LogicTree() {
-  this.helper = new DefaultLogicTreeHelper();
+function LogicTree(settings, helper) {
+  if (helper) {
+    this.helper = helper;
+  } else {
+    this.helper = new DefaultLogicTreeHelper();
+  }
+
+  if (settings) {
+    this.helper.settings = settings;
+  } else {
+    this.helper.settings = new DefaultLogicTreeSettings();
+  }
+
   this.canvas = null;
   this.context = null;
   this.tree = null;
