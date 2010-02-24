@@ -1,3 +1,8 @@
+//
+// Please append any new test onto the end of this file so that test numbers remain the same.
+// This way everybody will refer to the tests by the same number. Only change the ordering 
+// If you have a really really good reason for doing so.
+//
 var testData = new Array();
 var testDataInfo = new Array();
 
@@ -40,7 +45,7 @@ testData.push({
     }]
 });
 
-testDataInfo.push("same as two but the Or operator");
+testDataInfo.push("An And containing Or's");
 testData.push({
     "type": "Op",
     "value": "and",
@@ -108,7 +113,7 @@ testData.push({
     }]
 });
 
-testDataInfo.push("same as two but the Or operator");
+testDataInfo.push("Testing different node levels");
 testData.push({
     "type": "Op",
     "value": "and",
@@ -262,7 +267,7 @@ testData.push({
 
 testDataInfo.push("A Basic node with a really long name.");
 testData.push({
-    name: "really long name",
+    name: "really super long name",
     type: "Val",
     value: "false"
 });
