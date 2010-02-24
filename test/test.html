@@ -12,22 +12,19 @@
         var testArea = document.getElementById('testArea');
         for (test in testData) {
           // create the new objects
-          var newCanvas = document.createElement('canvas');
           var desc = document.createElement('p');
           var myLogicTree = new LogicTree();
           logicTrees.push(myLogicTree);
 
           // set the objects up
           desc.innerHTML = "Test " + test + ": [" + testDataInfo.shift() + "]";
-          newCanvas.height = "300";
-          newCanvas.width = "600";
 
           // append the items to the div
           testArea.appendChild(desc);
-          testArea.appendChild(newCanvas);
 
           // draw the logic tree
-          myLogicTree.init(testData[test], newCanvas);
+          myLogicTree.setDimensions(600, 300)
+          myLogicTree.init(testData[test], 'testArea');
           myLogicTree.draw();
         }
       }

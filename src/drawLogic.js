@@ -1,4 +1,6 @@
 function DefaultLogicTreeSettings() {
+  this.canvasHeight = "300";
+  this.canvasWidth = "600";
   this.nodeHeight = 2;
   this.nodeWidth = 1;
   this.sideLines = true;
@@ -62,7 +64,7 @@ function DefaultLogicTreeSettings() {
   });
 }
 
-function DefaultLogicTreeHelper () {
+function LogicTreeHelper () {
   this.settings = null; // this object is not defined by default
   this.isValid = (function (tree) {
     // TODO See if this function is nicer by starting with valid = false
@@ -211,161 +213,20 @@ function DefaultLogicTreeHelper () {
       return "false";
   });
 
-  this.draw = (function (tree, context) {
-    if (tree.type == "Op") {
-      if (tree.value == "and") {
-        this.drawAnd(tree, context);
-      } else {
-        this.drawOr(tree, context);
-      }
-    } else {
-      this.drawNode(tree, context);
-    }
-  });
-
-  this.drawNode = (function (tree, context) {
-    context.strokeStyle = "#000000";
-    var maxNodeHeight = Math.min(this.settings.nodeBoxHeight, context.tile_height);
-    var my_gradient = context.createLinearGradient(0, 0, context.canvas.width, 0);
-
-    // small hack
-    my_gradient.sAddColorStop = function (amount, color, context) {this.addColorStop((amount * context.tile_width) / context.canvas.width, color)}
-
-    my_gradient.addColorStop(0.0, this.settings.pickColor(tree.parentIn));
-    my_gradient.sAddColorStop(tree.start_x, this.settings.pickColor(tree.parentIn), context);
-    my_gradient.sAddColorStop(tree.start_x + tree.width, this.settings.pickColor(tree.out), context);
-    my_gradient.addColorStop(1.0, this.settings.pickColor(tree.out));
-
-    context.fillStyle = my_gradient;
-    context.sFillRect(tree.start_x, tree.start_y - (maxNodeHeight / 2), tree.width, maxNodeHeight);
-    context.sStrokeRect(tree.start_x, tree.start_y - (maxNodeHeight / 2), tree.width, maxNodeHeight);
-
-    context.fillStyle = this.settings.font.chooseColor(tree.parentIn, tree.out);
-    context.sFillText(tree.name, tree.start_x + (tree.width / 2), tree.start_y, tree.width - 0.01, maxNodeHeight);
-  });
-
-  this.drawOr = (function (tree, context) {
-    for (i in tree.child) {
-      context.strokeStyle = this.settings.pickColor(tree.parentIn);
-      context.beginPath();
-      context.sMoveTo(tree.start_x, tree.start_y);
-      context.sLineTo(tree.start_x, tree.child[i].start_y);
-      context.sLineTo(tree.child[i].start_x, tree.child[i].start_y);
-      context.stroke();
-
-      context.strokeStyle = this.settings.pickColor(tree.child[i].out);
-      context.beginPath();
-      context.sMoveTo(tree.child[i].start_x + tree.child[i].width, tree.child[i].start_y);
-      context.sLineTo(tree.start_x + tree.width, tree.child[i].start_y);
-      context.sLineTo(tree.start_x + tree.width, tree.start_y);
-      context.stroke();
-
-      this.draw(tree.child[i], context);
-    }
-  });
-
-  this.drawAnd = (function (tree, context) {
-    context.strokeStyle = this.settings.pickColor(tree.child[0].out);
-    context.beginPath();
-    context.sMoveTo(tree.child[1].start_x - 1, tree.child[1].start_y);
-    context.sLineTo(tree.child[1].start_x, tree.child[1].start_y);
-    context.stroke();
-
-    this.draw(tree.child[0], context);
-    this.draw(tree.child[1], context);
-  });
-
-  this.drawSideBars = (function (tree, context) {
-    if (this.settings.sideLines === true) {
-      context.strokeStyle = this.settings.pickColor(tree.parentIn);
-      context.beginPath();
-      context.sMoveTo(0, tree.start_y);
-      context.sLineTo(tree.start_x, tree.start_y);
-      context.stroke();
-
-      context.strokeStyle = this.settings.pickColor(tree.out);
-      context.beginPath();
-      context.sMoveTo(context.tiles_wide, tree.start_y);
-      context.sLineTo(context.tiles_wide - 1, tree.start_y);
-      context.stroke();
-    }
-  });
+  // Abstract objects
+  this.canvas = null;
+  this.initCanvas = null;
+  this.prepareCanvas = null;
 }
 
-function LogicTree(settings, helper) {
-  if (helper) {
-    this.helper = helper;
-  } else {
-    this.helper = new DefaultLogicTreeHelper();
-  }
-
-  if (settings) {
-    this.helper.settings = settings;
-  } else {
-    this.helper.settings = new DefaultLogicTreeSettings();
-  }
-
-  this.canvas = null;
-  this.context = null;
-  this.tree = null;
-  this.canvas_width = 0;
-  this.canvas_height = 0;
-  this.tree_loaded = false;
-  this.error_message = null;
-
-  this.init = (function (a_tree, a_canvas) {
-    this.tree_loaded = false;
-    if (!a_tree) { 
-      this.error_message = "init: Tree was null";
-      return false;
-    }
-    
-    if (!a_canvas) { 
-      this.error_message = "init: Canvas was null";
-      return false;
-    }
-    
-    if(!a_canvas.getContext) {
-      this.error_message = "init: canvas 'getContext' function not found. Maybe your browser does not support HTML5?";
-      return false;
-    }
-    
-    // error handling done, now create stuff
-    this.tree = a_tree;
-    this.canvas = a_canvas;
-
-    this.context = this.canvas.getContext('2d');
-    if(!this.helper.isValid(this.tree)) {
-      this.error_message = "init: Tree given contained invalid syntax.";
-      return false;
-    }
-
-
-    // tile details
-    this.context.tiles_wide = this.helper.calculateWidth(this.tree) + (this.helper.settings.sideLines ? 2 : 0);
-    this.context.tiles_high = this.helper.calculateHeight(this.tree);
-
-    this.tree.start_x = this.helper.settings.sideLines ? 1 : 0;
-    this.tree.start_y = this.tree.height / 2;
-    this.helper.calculateChildPosition(this.tree);
-
-    // calculate the result of the tree
-    this.tree.parentIn = "true";  // by default
-    this.tree.out = this.helper.calculateBooleanResult(this.tree);
-    
-    this.dodgyExtendContextToMakeItEasyForMe();
-
-    this.tree_loaded = true;
-    return true;
-  });
-  
-  this.dodgyExtendContextToMakeItEasyForMe = (function () {
-    this.context.sLineTo = function (x, y) {this.lineTo(x * this.tile_width, y * this.tile_height)}
-    this.context.sMoveTo = function (x, y) {this.moveTo(x * this.tile_width, y * this.tile_height)}
-    this.context.sStrokeRect = function (x, y, w, h) {this.strokeRect(x * this.tile_width, y * this.tile_height, w * this.tile_width, h * this.tile_height)}
-    this.context.sFillRect = function (x, y, w, h) {this.fillRect(x * this.tile_width, y * this.tile_height, w * this.tile_width, h * this.tile_height)}
-    this.context.sStrokeText = function (text, x, y, maxWidth) {this.strokeText(text, x * this.tile_width, y * this.tile_height, maxWidth)}
-    this.context.sFillText = function (text, x, y, maxWidth, maxHeight) {
+function HTML5_LogicTreeHelper () {
+  this.dodgyExtendContextToMakeItEasyForMe = (function (context) {
+    context.sLineTo = function (x, y) {this.lineTo(x * this.tile_width, y * this.tile_height)}
+    context.sMoveTo = function (x, y) {this.moveTo(x * this.tile_width, y * this.tile_height)}
+    context.sStrokeRect = function (x, y, w, h) {this.strokeRect(x * this.tile_width, y * this.tile_height, w * this.tile_width, h * this.tile_height)}
+    context.sFillRect = function (x, y, w, h) {this.fillRect(x * this.tile_width, y * this.tile_height, w * this.tile_width, h * this.tile_height)}
+    context.sStrokeText = function (text, x, y, maxWidth) {this.strokeText(text, x * this.tile_width, y * this.tile_height, maxWidth)}
+    context.sFillText = function (text, x, y, maxWidth, maxHeight) {
       var temp_font = this.font.split(" ");
       var fontSize = parseInt(temp_font[1]);
       if (fontSize > maxHeight * this.tile_height) {
@@ -377,29 +238,173 @@ function LogicTree(settings, helper) {
     }
   });
 
+  this.draw = (function (tree) {
+    if (tree.type == "Op") {
+      if (tree.value == "and") {
+        this.drawAnd(tree);
+      } else {
+        this.drawOr(tree);
+      }
+    } else {
+      this.drawNode(tree);
+    }
+  });
+
+  this.drawNode = (function (tree) {
+    this.context.strokeStyle = "#000000";
+    var maxNodeHeight = Math.min(this.settings.nodeBoxHeight, this.context.tile_height);
+    var my_gradient = this.context.createLinearGradient(0, 0, this.context.canvas.width, 0);
+
+    // small hack
+    my_gradient.sAddColorStop = function (amount, color, context) {this.addColorStop((amount * context.tile_width) / context.canvas.width, color)}
+
+    my_gradient.addColorStop(0.0, this.settings.pickColor(tree.parentIn));
+    my_gradient.sAddColorStop(tree.start_x, this.settings.pickColor(tree.parentIn), this.context);
+    my_gradient.sAddColorStop(tree.start_x + tree.width, this.settings.pickColor(tree.out), this.context);
+    my_gradient.addColorStop(1.0, this.settings.pickColor(tree.out));
+
+    this.context.fillStyle = my_gradient;
+    this.context.sFillRect(tree.start_x, tree.start_y - (maxNodeHeight / 2), tree.width, maxNodeHeight);
+    this.context.sStrokeRect(tree.start_x, tree.start_y - (maxNodeHeight / 2), tree.width, maxNodeHeight);
+
+    this.context.fillStyle = this.settings.font.chooseColor(tree.parentIn, tree.out);
+    this.context.sFillText(tree.name, tree.start_x + (tree.width / 2), tree.start_y, tree.width - 0.01, maxNodeHeight);
+  });
+
+  this.drawOr = (function (tree) {
+    for (i in tree.child) {
+      this.context.strokeStyle = this.settings.pickColor(tree.parentIn);
+      this.context.beginPath();
+      this.context.sMoveTo(tree.start_x, tree.start_y);
+      this.context.sLineTo(tree.start_x, tree.child[i].start_y);
+      this.context.sLineTo(tree.child[i].start_x, tree.child[i].start_y);
+      this.context.stroke();
+
+      this.context.strokeStyle = this.settings.pickColor(tree.child[i].out);
+      this.context.beginPath();
+      this.context.sMoveTo(tree.child[i].start_x + tree.child[i].width, tree.child[i].start_y);
+      this.context.sLineTo(tree.start_x + tree.width, tree.child[i].start_y);
+      this.context.sLineTo(tree.start_x + tree.width, tree.start_y);
+      this.context.stroke();
+
+      this.draw(tree.child[i]);
+    }
+  });
+
+  this.drawAnd = (function (tree) {
+    this.context.strokeStyle = this.settings.pickColor(tree.child[0].out);
+    this.context.beginPath();
+    this.context.sMoveTo(tree.child[1].start_x - 1, tree.child[1].start_y);
+    this.context.sLineTo(tree.child[1].start_x, tree.child[1].start_y);
+    this.context.stroke();
+
+    this.draw(tree.child[0]);
+    this.draw(tree.child[1]);
+  });
+
+  this.drawSideBars = (function (tree) {
+    if (this.settings.sideLines === true) {
+      this.context.strokeStyle = this.settings.pickColor(tree.parentIn);
+      this.context.beginPath();
+      this.context.sMoveTo(0, tree.start_y);
+      this.context.sLineTo(tree.start_x, tree.start_y);
+      this.context.stroke();
+
+      this.context.strokeStyle = this.settings.pickColor(tree.out);
+      this.context.beginPath();
+      this.context.sMoveTo(this.context.tiles_wide, tree.start_y);
+      this.context.sLineTo(this.context.tiles_wide - 1, tree.start_y);
+      this.context.stroke();
+    }
+  });
+
+  this.initCanvas = (function (tree) {
+    this.canvas.width = this.settings.canvasWidth;
+    this.canvas.height = this.settings.canvasHeight;
+
+    // tile details
+    this.context.tiles_wide = this.calculateWidth(tree) + (this.settings.sideLines ? 2 : 0);
+    this.context.tiles_high = this.calculateHeight(tree);
+
+    this.context.tile_width = this.canvas.width / this.context.tiles_wide;
+    this.context.tile_height = this.canvas.height / this.context.tiles_high;
+
+    tree.start_x = this.settings.sideLines ? 1 : 0;
+    tree.start_y = tree.height / 2;
+    this.calculateChildPosition(tree);
+
+    // calculate the result of the tree
+    tree.parentIn = "true";  // by default
+    tree.out = this.calculateBooleanResult(tree);
+  });
+
+  this.prepareCanvas = (function () {
+    this.context.lineWidth = 1;
+
+    // clear the screen
+    this.context.clearRect(0, 0, this.context.tiles_wide, this.context.tiles_high);
+    this.context.textAlign = "center";
+    this.context.font = this.settings.font.weight + ' ' + this.settings.font.size + 'px ' + this.settings.font.style;
+  });
+
+  this.canvas = document.createElement('canvas');
+  this.context = this.canvas.getContext('2d');
+  this.dodgyExtendContextToMakeItEasyForMe(this.context);
+}
+HTML5_LogicTreeHelper.prototype = new LogicTreeHelper();  // inherit basic properties
+
+function LogicTree(settings, helper) {
+  this.wrapper = null;
+  this.tree = null;
+  this.tree_loaded = false;
+  this.error_message = null;
+
+  this.useOldBrowser = (function () {
+      // the purpose of this function is to see wether or not code should be generated for an old browser or a
+      // new one
+
+  });
+
+  this.setDimensions = (function (width, height) {
+    if (this.helper && this.helper.settings) {
+      this.helper.settings.canvasWidth = width;
+      this.helper.settings.canvasHeight = height;
+    }
+  });
+
+  this.init = (function (a_tree, a_wrapper) {
+    this.tree_loaded = false;
+    if (!a_tree) { 
+      this.error_message = "init: Tree was null";
+      return false;
+    }
+    
+    if (!a_wrapper) { 
+      this.error_message = "init: Wrapper was null";
+      return false;
+    }
+    
+    // error handling done, now create stuff
+    this.tree = a_tree;
+    this.wrapper = document.getElementById(a_wrapper);
+
+    if(!this.helper.isValid(this.tree)) {
+      this.error_message = "init: Tree given contained invalid syntax.";
+      return false;
+    }
+
+    this.helper.initCanvas(this.tree);
+    
+    this.tree_loaded = true;
+    return true;
+  });
+  
   this.draw = (function () {
     if (this.tree_loaded) {
-      // canvas details
-      this.canvas_height = this.canvas.clientHeight;
-      this.canvas_width = this.canvas.clientWidth;
-
-      // scale by tile width to get the correct dimensions
-      this.context.save();
-
-      // Dangerous: The next lines define a possibly dangerous hack
-      this.context.tile_width = this.canvas_width / this.context.tiles_wide;
-      this.context.tile_height = this.canvas_height / this.context.tiles_high;
-
-      this.context.lineWidth = 1;
-
-      // clear the screen
-      this.context.clearRect(0, 0, this.context.tiles_wide, this.context.tiles_high);
-      this.context.textAlign = "center";
-      this.context.font = this.helper.settings.font.weight + ' ' + this.helper.settings.font.size + 'px ' + this.helper.settings.font.style;
-
-      this.helper.drawSideBars(this.tree, this.context);
+      this.helper.prepareCanvas();
+      this.wrapper.appendChild(this.helper.canvas);
+      this.helper.drawSideBars(this.tree);
       this.helper.draw(this.tree, this.context);
-      this.context.restore();
     } else {
       this.error_message = "draw: The tree has not been (or could not be) loaded so it cannot be drawn";
       return false;
@@ -407,4 +412,17 @@ function LogicTree(settings, helper) {
 
     return true;
   });
+
+  if (helper) {
+    this.helper = helper;
+  } else {
+    this.helper = new HTML5_LogicTreeHelper();
+  }
+
+  if (settings) {
+    this.helper.settings = settings;
+  } else {
+    this.helper.settings = new DefaultLogicTreeSettings();
+  }
+
 }

@@ -2,13 +2,15 @@
 - 2.Text in the node boxes.
 - 3.Use objects instead of variables.
 - 4.copyright file
-- 5.More test cases.
+- 5.re-evaluate design in respect to ease of extension
+- 6.More test cases.
     - 1.show all test cases at once on the one page
-- 6.Readme file
-  7.Provide complete documentation
-      1.Full working example
+- 7.Readme file
+- 8.Host the project somewhere for all to see the test cases.
+  9.Provide complete documentation
+    - 1.Full working example
       2.Tell people how to change the settings
       3.Tell people how to extend functionality
-  8.A zoom feature for large graphs.
+ 10.A zoom feature for large graphs.
       1.Javascript keys to navigate once it has been zoomed.
-  9.Host the project somewhere for all to see the test cases.
+ 11.Support browsers that use html versions earlier than 5.
