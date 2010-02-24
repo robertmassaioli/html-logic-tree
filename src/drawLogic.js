@@ -1,4 +1,4 @@
-function DefaultLogicTreeSettings() {
+function LogicTreeSettings() {
   this.canvasHeight = "300";
   this.canvasWidth = "600";
   this.nodeHeight = 2;
@@ -63,6 +63,11 @@ function DefaultLogicTreeSettings() {
       return this.maybeColor;
   });
 }
+
+function OLDHTML_LogicTreeSettings() {
+  this.nodeBackgroundColor = '#EEEEEE';
+}
+OLDHTML_LogicTreeSettings.prototype = new LogicTreeSettings();
 
 function LogicTreeHelper () {
   this.settings = null; // this object is not defined by default
@@ -213,11 +218,191 @@ function LogicTreeHelper () {
       return "false";
   });
 
-  // Abstract objects
+  // Abstract objects and functions
   this.canvas = null;
   this.initCanvas = null;
   this.prepareCanvas = null;
+  this.draw = null;
+  this.finishCanvas = null;
 }
+
+function OLDHTML_LogicTreeHelper() {
+  this.tileSpace = null;
+  this.context = new Object();
+  
+  this.initCanvas = (function (tree) {
+    this.canvas = document.createElement('table');
+    this.canvas.width = this.settings.canvasWidth;
+    //this.canvas.height = this.settings.canvasHeight;
+
+    // tile details
+    this.context.tiles_wide = this.calculateWidth(tree) + (this.settings.sideLines ? 2 : 0);
+    this.context.tiles_high = this.calculateHeight(tree);
+
+    this.context.tile_width = this.canvas.width / this.context.tiles_wide;
+    this.context.tile_height = this.settings.canvasHeight / this.context.tiles_high;
+
+    tree.start_x = this.settings.sideLines ? 1 : 0;
+    tree.start_y = tree.height / 2;
+    this.calculateChildPosition(tree);
+
+    // calculate the result of the tree
+    tree.parentIn = "true";  // by default
+    tree.out = this.calculateBooleanResult(tree);
+  });
+
+  this.prepareCanvas = (function () {
+    // clear out the table
+    while (this.canvas.rows.length > 0) {
+      this.canvas.deleteRow(0);
+    }
+
+    // create a tile space that I can use
+    this.tileSpace = new Array();
+    for (var i = 0; i < this.context.tiles_high; ++i) {
+      this.tileSpace[i] = new Array();
+      //var newRow = document.createElement('tr');
+      for (var j = 0; j < this.context.tiles_wide; ++j) {
+        var newCell = document.createElement('td');
+        newCell.style.width = this.context.tile_width;
+        newCell.style.height = this.context.tile_height;
+        this.tileSpace[i][j] = newCell;
+        //newRow.appendChild(newCell);
+      }
+      //this.canvas.appendChild(newRow);
+    }
+  });
+
+  this.finishCanvas = (function () {
+    for (var i = 0; i < this.context.tiles_high; ++i) {
+      var newRow = document.createElement('tr');
+      for (var j = 0; j < this.context.tiles_wide; ++j) {
+        if (this.tileSpace[i][j] != null) {
+          newRow.appendChild(this.tileSpace[i][j]);
+        }
+      }
+      this.canvas.appendChild(newRow);
+    }
+  });
+  
+  this.draw = (function (tree) {
+    if (tree.type == "Op") {
+      if (tree.value == "and") {
+        this.drawAnd(tree);
+      } else {
+        this.drawOr(tree);
+      }
+    } else {
+      this.drawNode(tree);
+    }
+  });
+
+  this.drawNode = (function (tree) {
+    this.tileSpace[tree.start_y][tree.start_x] = null; // delete the square below to make room
+    var currentCell = this.tileSpace[tree.start_y - 1][tree.start_x];
+    currentCell.rowSpan = 2;
+    var nodeDiv = document.createElement('div');
+    nodeDiv.style.borderStyle = 'solid';
+    nodeDiv.style.borderWidth = '1px';
+    nodeDiv.style.borderColor = this.settings.pickColor(tree.out);
+    nodeDiv.innerHTML = tree.name;
+
+    if (this.settings.nodeBackgroundColor) {
+      nodeDiv.style.backgroundColor = this.settings.nodeBackgroundColor;
+    } else {
+      nodeDiv.style.backgroundColor = '#EEEEEE';
+    }
+    nodeDiv.style.color = this.settings.font.chooseColor(tree.parentIn, tree.out);
+    nodeDiv.style.fontSize = this.settings.font.size + 'px';
+    nodeDiv.style.fontWeight = this.settings.font.weight;
+
+    nodeDiv.style.textAlign = 'center';
+    nodeDiv.style.verticalAlign = 'middle';
+
+    nodeDiv.style.height = (this.settings.nodeBoxHeight * this.context.tile_height) + 'px';
+
+    currentCell.appendChild(nodeDiv);
+  });
+
+  // the side variable => [0 - top, 1 - right, 2 - bottom, 3 - left]
+  this.drawNodeLine = (function (offset, one, two, side, color) {
+    var start = Math.min(one, two);
+    var end = Math.max(one, two);
+
+    var setupSide = (function (element) {
+      element.style.borderColor = color;
+      element.style.borderWidth = "1px";
+      switch(side) {
+        case 0:
+          element.style.borderTopStyle = 'solid';
+          break;
+        case 1:
+          element.style.borderRightStyle = 'solid';
+          break;
+        case 2:
+          element.style.borderBottomStyle = 'solid';
+          break;
+        case 3:
+          element.style.borderLeftStyle = 'solid';
+          break;
+      }
+    });
+
+    var isVertical = (side % 2 != 0);
+    for (var i = start; i < end; i++) {
+      var currentCell = this.tileSpace[isVertical ? i : offset][isVertical ? offset : i];
+      setupSide(currentCell);
+    }
+  });
+
+  this.drawOr = (function (tree) {
+    // top left
+    this.drawNodeLine(tree.start_x, tree.start_y, tree.child[0].start_y, 3, this.settings.pickColor(tree.parentIn));
+    this.drawNodeLine(tree.child[0].start_y, tree.start_x, tree.child[0].start_x, 0, this.settings.pickColor(tree.parentIn));
+
+    // top right
+    this.drawNodeLine(tree.child[0].start_y, tree.child[0].start_x + tree.child[0].width, tree.start_x + tree.width, 0, this.settings.pickColor(tree.child[0].out));
+    this.drawNodeLine(tree.start_x + tree.width - 1, tree.child[0].start_y, tree.start_y, 1, this.settings.pickColor(tree.child[0].out));
+
+    // bottom right
+    this.drawNodeLine(tree.start_x + tree.width - 1, tree.start_y, tree.child[1].start_y, 1, this.settings.pickColor(tree.child[1].out));
+    this.drawNodeLine(tree.child[1].start_y - 1, tree.child[1].start_x + tree.child[1].width, tree.start_x + tree.width, 2, this.settings.pickColor(tree.child[1].out));
+
+    // bottom left
+    this.drawNodeLine(tree.start_x, tree.start_y, tree.child[1].start_y, 3, this.settings.pickColor(tree.parentIn));
+    this.drawNodeLine(tree.child[1].start_y - 1, tree.start_x, tree.child[1].start_x, 2, this.settings.pickColor(tree.parentIn));
+
+    this.draw(tree.child[0]);
+    this.draw(tree.child[1]);
+  });
+
+  this.drawAnd = (function (tree) {
+    var currentCell = this.tileSpace[tree.child[1].start_y][tree.child[1].start_x - 1];
+    currentCell.style.borderTopStyle = 'solid';
+    currentCell.style.borderTopWidth = '1px';
+    currentCell.style.borderTopColor = this.settings.pickColor(tree.child[0].out);
+
+    this.draw(tree.child[0]);
+    this.draw(tree.child[1]);
+  });
+
+  this.drawSideBars = (function (tree) {
+    if (this.settings.sideLines === true) {
+      var currentCell;
+
+      currentCell = this.tileSpace[tree.start_y][0];
+      currentCell.style.borderTopStyle = 'solid';
+      currentCell.style.borderTopWidth = '1px';
+      currentCell.style.borderTopColor = this.settings.pickColor(tree.parentIn);
+
+      currentCell = this.tileSpace[tree.start_y][this.context.tiles_wide - 1];
+      currentCell.style.borderTopStyle = 'solid';
+      currentCell.style.borderTopWidth = '1px';
+      currentCell.style.borderTopColor = this.settings.pickColor(tree.out);
+    }
+  });
+}
+OLDHTML_LogicTreeHelper.prototype = new LogicTreeHelper();  // inherit basic properties
 
 function HTML5_LogicTreeHelper () {
   this.dodgyExtendContextToMakeItEasyForMe = (function (context) {
@@ -347,23 +532,21 @@ function HTML5_LogicTreeHelper () {
     this.context.font = this.settings.font.weight + ' ' + this.settings.font.size + 'px ' + this.settings.font.style;
   });
 
+  this.finishCanvas = (function () {
+      // empty function because HTML5 is awesome! :D
+  });
+
   this.canvas = document.createElement('canvas');
   this.context = this.canvas.getContext('2d');
   this.dodgyExtendContextToMakeItEasyForMe(this.context);
 }
 HTML5_LogicTreeHelper.prototype = new LogicTreeHelper();  // inherit basic properties
 
-function LogicTree(settings, helper) {
+function LogicTree(forceOldHTML, settings, helper) {
   this.wrapper = null;
   this.tree = null;
   this.tree_loaded = false;
   this.error_message = null;
-
-  this.useOldBrowser = (function () {
-      // the purpose of this function is to see wether or not code should be generated for an old browser or a
-      // new one
-
-  });
 
   this.setDimensions = (function (width, height) {
     if (this.helper && this.helper.settings) {
@@ -404,7 +587,8 @@ function LogicTree(settings, helper) {
       this.helper.prepareCanvas();
       this.wrapper.appendChild(this.helper.canvas);
       this.helper.drawSideBars(this.tree);
-      this.helper.draw(this.tree, this.context);
+      this.helper.draw(this.tree);
+      this.helper.finishCanvas();
     } else {
       this.error_message = "draw: The tree has not been (or could not be) loaded so it cannot be drawn";
       return false;
@@ -413,16 +597,39 @@ function LogicTree(settings, helper) {
     return true;
   });
 
+  // Begin External Code
+  // This canvas function was copied (With Permission) from http://code.google.com/p/browser-canvas-support/
+  this.canvas_compatible = false;
+  this.check_canvas = (function() {
+      try {
+        this.canvas_compatible = !!(document.createElement('canvas').getContext('2d')); // S60
+        } catch(e) {
+        this.canvas_compatible = !!(document.createElement('canvas').getContext); // IE
+      } 
+      return this.canvas_compatible;
+  });
+  // End External Code 
+
+  // run the check once
+  this.check_canvas();
+
   if (helper) {
     this.helper = helper;
   } else {
-    this.helper = new HTML5_LogicTreeHelper();
+    if (this.canvas_compatible && !forceOldHTML) {
+      this.helper = new HTML5_LogicTreeHelper();
+    } else {
+      this.helper = new OLDHTML_LogicTreeHelper();
+    }
   }
 
   if (settings) {
     this.helper.settings = settings;
   } else {
-    this.helper.settings = new DefaultLogicTreeSettings();
+    if (this.canvas_compatible && !forceOldHTML) {
+      this.helper.settings = new LogicTreeSettings();
+    } else {
+      this.helper.settings = new OLDHTML_LogicTreeSettings();
+    }
   }
-
 }

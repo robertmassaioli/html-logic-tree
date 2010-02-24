@@ -7,6 +7,7 @@
       // this array is for debugging purposes, you can actually just use one LogicTree for
       // all the tests and it will still work exactly the same way.
       var logicTrees = new Array(); 
+      var oldLogicTrees = new Array();
 
       function startEverything() {
         var testArea = document.getElementById('testArea');
@@ -23,7 +24,14 @@
           testArea.appendChild(desc);
 
           // draw the logic tree
-          myLogicTree.setDimensions(600, 300)
+          myLogicTree.setDimensions(600, 300);
+          desc.innerHTML += " { success: " +  myLogicTree.init(testData[test], 'testArea') + " }";
+          myLogicTree.draw();
+
+          myLogicTree = new LogicTree(true);
+          oldLogicTrees.push(myLogicTree);
+
+          myLogicTree.setDimensions(600, 300);
           myLogicTree.init(testData[test], 'testArea');
           myLogicTree.draw();
         }
@@ -36,6 +44,9 @@
       This is a page that just displays all of the tests in a brief overview for the purpose of quickly 
       seeing if anything is broken. It shows you the current state of the project. The tests are ordered,
       roughly, from simplest to most difficult.
+
+      With every test case you see the HTML5 Version on the code first and the Older versions of HTML second.
+      If they both look the same then you are on a Browser that does not support HTML5.
     </p>
     <div id='testArea'></div>
   </body>

@@ -7,10 +7,11 @@
     - 1.show all test cases at once on the one page
 - 7.Readme file
 - 8.Host the project somewhere for all to see the test cases.
-  9.Provide complete documentation
+- 9.Support browsers that use html versions earlier than 5.
+ 10.Provide complete documentation
     - 1.Full working example
       2.Tell people how to change the settings
       3.Tell people how to extend functionality
- 10.A zoom feature for large graphs.
+      4.Make sure to mention when the canvas is appended to the wrapper.
+ 11.A zoom feature for large graphs.
       1.Javascript keys to navigate once it has been zoomed.
- 11.Support browsers that use html versions earlier than 5.
