@@ -314,8 +314,9 @@ function OLDHTML_LogicTreeHelper() {
       nodeDiv.style.backgroundColor = '#EEEEEE';
     }
     nodeDiv.style.color = this.settings.font.chooseColor(tree.parentIn, tree.out);
-    nodeDiv.style.fontSize = this.settings.font.size + 'px';
     nodeDiv.style.fontWeight = this.settings.font.weight;
+    var maxHeight = Math.min(this.settings.nodeBoxHeight, this.context.tile_height);
+    nodeDiv.style.fontSize = Math.min(maxHeight * this.context.tile_height - 1, this.settings.font.size) + 'px';
 
     nodeDiv.style.textAlign = 'center';
     currentCell.valign = 'middle';
