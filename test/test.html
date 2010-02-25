@@ -1,6 +1,8 @@
 <html>
   <head>
     <title>HTML5 Canvas Test</title>
+    <!-- This meta tag is to force IE8 Rendering -->
+    <meta http-equiv="X-UA-Compatible" content="IE=100">   
     <script type='text/javascript' src='../src/drawLogic.js'></script>
     <script type='text/javascript' src='tests.js'></script>
     <script type='text/javascript'>
@@ -9,45 +11,78 @@
       var logicTrees = new Array(); 
       var oldLogicTrees = new Array();
 
-      function startEverything() {
+      function reactToLoad() {
+        var val = 0;
+        if (navigator.appName != 'Netscape') {
+          document.getElementById('choosePlease').value = '2';
+          val = 2;
+        }
+        drawEverything(val);
+      }
+
+      function reactToChange() {
+        drawEverything(document.getElementById('choosePlease').value);
+      }
+
+      function drawEverything(show) {
         var testArea = document.getElementById('testArea');
+        testArea.innerHTML = "";
+
         for (test in testData) {
           // create the new objects
           var desc = document.createElement('p');
-          var myLogicTree = new LogicTree();
-          logicTrees.push(myLogicTree);
 
           // set the objects up
-          desc.innerHTML = "Test " + test + ": [" + testDataInfo.shift() + "]";
+          desc.innerHTML = "Test " + test + ": [" + testDataInfo[test] + "]";
 
           // append the items to the div
           testArea.appendChild(desc);
 
           // draw the logic tree
-          myLogicTree.setDimensions(600, 300);
-          desc.innerHTML += " { success: " +  myLogicTree.init(testData[test], 'testArea') + " }";
-          myLogicTree.draw();
+          if (show != 2) {
+            var myLogicTree = new LogicTree();
+            logicTrees.push(myLogicTree);
 
-          myLogicTree = new LogicTree(true);
-          oldLogicTrees.push(myLogicTree);
+            myLogicTree.setDimensions(600, 200);
+            desc.innerHTML += " { success: " +  myLogicTree.init(testData[test], 'testArea') + " }";
+            myLogicTree.draw();
+          } 
+          if (show != 1) {
+            myLogicTree = new LogicTree(true);
+            oldLogicTrees.push(myLogicTree);
 
-          myLogicTree.setDimensions(600, 300);
-          myLogicTree.init(testData[test], 'testArea');
-          myLogicTree.draw();
+            myLogicTree.setDimensions(600, 200);
+            myLogicTree.init(testData[test], 'testArea');
+            myLogicTree.draw();
+          }
         }
       }
-  </script>
+    </script>
   </head>
-  <body onload='javascript:startEverything()'>
+  <body onload='javascript:reactToLoad()'>
     <h1>Full Test Suite</h1>
     <p>
       This is a page that just displays all of the tests in a brief overview for the purpose of quickly 
       seeing if anything is broken. It shows you the current state of the project. The tests are ordered,
-      roughly, from simplest to most difficult.
-
-      With every test case you see the HTML5 Version on the code first and the Older versions of HTML second.
-      If they both look the same then you are on a Browser that does not support HTML5.
+      roughly, from simplest to most difficult.<br /><br />
+      
+      <strong>
+        With every test case you see the HTML5 Version on the code first and the Older versions of HTML second.
+        If they both look the same then you are on a Browser that does not support HTML5.
+      </strong>
     </p>
+    <span>Please Choose which to show:</span>
+    <select id="choosePlease" onchange='javascript:reactToChange()'>
+      <option value='0' selected="selected">Both</option>
+      <option value='1'>HTML5</option>
+      <option value='2'>Old HTML</option>
+    </select>
+    <p>====== Start Tests ======</p>
     <div id='testArea'></div>
+    <p>====== End Tests ======</p>
+    <p>
+      Made by <a href='http://massaioli.homelinux.com/~robert/'>Robert Massaioli</a>
+      and is avaliable on <a href='http://github.com/robertmassaioli/html5-logic-tree'>GitHub</a>
+    </p>
   </body>
 </html>

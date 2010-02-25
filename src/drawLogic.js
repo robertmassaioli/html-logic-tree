@@ -72,13 +72,12 @@ OLDHTML_LogicTreeSettings.prototype = new LogicTreeSettings();
 function LogicTreeHelper () {
   this.settings = null; // this object is not defined by default
   this.isValid = (function (tree) {
-    // TODO See if this function is nicer by starting with valid = false
     var valid = true;
 
     if (!tree.type) return false;
 
     if (tree.type == "Val") {
-      if (this.settings.nodeNameRequired && (!tree.name || tree.name == "")) valid = false;
+      // if (this.settings.nodeNameRequired && (!tree.name || tree.name == "")) valid = false; - Now Allowed
       if (tree.value) {
         switch(tree.value) {
           case 'true':
@@ -232,6 +231,7 @@ function OLDHTML_LogicTreeHelper() {
   
   this.initCanvas = (function (tree) {
     this.canvas = document.createElement('table');
+    this.canvas.style.borderCollapse = "collapse";
     this.canvas.width = this.settings.canvasWidth;
     //this.canvas.height = this.settings.canvasHeight;
 
@@ -300,12 +300,13 @@ function OLDHTML_LogicTreeHelper() {
   this.drawNode = (function (tree) {
     this.tileSpace[tree.start_y][tree.start_x] = null; // delete the square below to make room
     var currentCell = this.tileSpace[tree.start_y - 1][tree.start_x];
-    currentCell.rowSpan = 2;
+    currentCell.rowSpan = '2';
+    currentCell.style.verticalAlign = 'middle';
     var nodeDiv = document.createElement('div');
     nodeDiv.style.borderStyle = 'solid';
     nodeDiv.style.borderWidth = '1px';
     nodeDiv.style.borderColor = this.settings.pickColor(tree.out);
-    nodeDiv.innerHTML = tree.name;
+    if (tree.name) nodeDiv.innerHTML = tree.name;
 
     if (this.settings.nodeBackgroundColor) {
       nodeDiv.style.backgroundColor = this.settings.nodeBackgroundColor;
@@ -317,7 +318,10 @@ function OLDHTML_LogicTreeHelper() {
     nodeDiv.style.fontWeight = this.settings.font.weight;
 
     nodeDiv.style.textAlign = 'center';
-    nodeDiv.style.verticalAlign = 'middle';
+    currentCell.valign = 'middle';
+    currentCell.style.verticalAlign = 'middle';
+    nodeDiv.style.marginTop = 'auto';
+    nodeDiv.style.marginBottom = 'auto';
 
     nodeDiv.style.height = (this.settings.nodeBoxHeight * this.context.tile_height) + 'px';
 
@@ -344,6 +348,9 @@ function OLDHTML_LogicTreeHelper() {
           break;
         case 3:
           element.style.borderLeftStyle = 'solid';
+          break;
+        default:
+          element.innerHTML = "<abbr title=\"Invalid Side Specified\">ISS</abbr>";
           break;
       }
     });
@@ -419,7 +426,8 @@ function HTML5_LogicTreeHelper () {
         temp_font[1] = fontSize + "px";
         this.font = temp_font.join(' ');
       }
-      this.fillText(text, x * this.tile_width, y * this.tile_height + (fontSize / 3), maxWidth * this.tile_width)
+      // this is currently not supported in Opera
+      if (this.fillText) this.fillText(text, x * this.tile_width, y * this.tile_height + (fontSize / 3), maxWidth * this.tile_width);
     }
   });
 
@@ -453,7 +461,9 @@ function HTML5_LogicTreeHelper () {
     this.context.sStrokeRect(tree.start_x, tree.start_y - (maxNodeHeight / 2), tree.width, maxNodeHeight);
 
     this.context.fillStyle = this.settings.font.chooseColor(tree.parentIn, tree.out);
-    this.context.sFillText(tree.name, tree.start_x + (tree.width / 2), tree.start_y, tree.width - 0.01, maxNodeHeight);
+    if(tree.name) {
+      this.context.sFillText(tree.name, tree.start_x + (tree.width / 2), tree.start_y, tree.width - 0.01, maxNodeHeight);
+    }
   });
 
   this.drawOr = (function (tree) {
