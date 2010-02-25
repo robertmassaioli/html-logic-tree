@@ -3,7 +3,7 @@ CF=-Wall -Werror
 minifier=jsmin
 jsfiles= src/drawLogic-min.js test/tests-min.js
 distDir=bin
-project_name=html5-logic-tree
+project_name=html-logic-tree
 
 all: $(jsfiles)
 	rm -fr $(distDir)
