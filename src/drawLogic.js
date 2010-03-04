@@ -315,16 +315,19 @@ function OLDHTML_LogicTreeHelper() {
     }
     nodeDiv.style.color = this.settings.font.chooseColor(tree.parentIn, tree.out);
     nodeDiv.style.fontWeight = this.settings.font.weight;
-    var maxHeight = Math.min(this.settings.nodeBoxHeight, this.context.tile_height);
-    nodeDiv.style.fontSize = Math.min(maxHeight * this.context.tile_height - 1, this.settings.font.size) + 'px';
+    var maxHeight = Math.min(this.settings.nodeBoxHeight, this.settings.nodeHeight) * this.context.tile_height - 1;
+    var fSize = Math.min(maxHeight, this.settings.font.size);
+    nodeDiv.style.fontSize = fSize + 'px';
+
+    var height = (this.settings.nodeBoxHeight * this.context.tile_height);
+    nodeDiv.style.height = fSize + 'px';
 
     nodeDiv.style.textAlign = 'center';
     currentCell.valign = 'middle';
     currentCell.style.verticalAlign = 'middle';
-    nodeDiv.style.marginTop = 'auto';
-    nodeDiv.style.marginBottom = 'auto';
-
-    nodeDiv.style.height = (this.settings.nodeBoxHeight * this.context.tile_height) + 'px';
+    nodeDiv.style.verticalAlign = 'middle';
+    nodeDiv.style.paddingTop = ((maxHeight - fSize) / 2) + 'px';
+    nodeDiv.style.paddingBottom = ((maxHeight - fSize) / 2) + 'px';
 
     currentCell.appendChild(nodeDiv);
   });
@@ -446,7 +449,7 @@ function HTML5_LogicTreeHelper () {
 
   this.drawNode = (function (tree) {
     this.context.strokeStyle = "#000000";
-    var maxNodeHeight = Math.min(this.settings.nodeBoxHeight, this.context.tile_height);
+    var maxNodeHeight = Math.min(this.settings.nodeBoxHeight, this.settings.nodeHeight);
     var my_gradient = this.context.createLinearGradient(0, 0, this.context.canvas.width, 0);
 
     // small hack
